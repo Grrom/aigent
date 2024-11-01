@@ -12,7 +12,7 @@ load_dotenv()
 def send_prompt(request):
     genai.configure(api_key=os.getenv("APIKEY"))
 
-    request_json = json.loads(request.data)
+    request_json = json.loads(request.data, strict=False)
 
     prompt = request_json.get("prompt", None)
     if prompt is None:
