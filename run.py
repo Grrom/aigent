@@ -2,7 +2,12 @@ import json
 from urllib.request import Request
 from main import send_prompt
 
-test_body = {"prompt": "hello world"}
+test_body = {
+    "prompt": "hello world",
+    "base64_text_files": [
+        "aGVsbG8gdGhlcmUhIGhvdyBhcmUgeW91IGRvaW5nPwo=",
+    ],
+}
 
 request = Request(
     method="POST",

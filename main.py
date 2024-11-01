@@ -1,21 +1,16 @@
+import base64
 import json
 import os
 from dotenv import load_dotenv
 from flask import Response
-import requests
+import google.generativeai as genai
+import os
 
 load_dotenv()
 
 
 def send_prompt(request):
-    """Responds to any HTTP request.
-    Args:
-        request (flask.Request): HTTP request object.
-    Returns:
-        The response text or any set of values that can be turned into a
-        Response object using
-        `make_response <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>`.
-    """
+    genai.configure(api_key=os.getenv("APIKEY"))
 
     request_json = json.loads(request.data)
 
@@ -23,12 +18,18 @@ def send_prompt(request):
     if prompt is None:
         raise ValueError("Prompt is required")
 
-    response = requests.post(
-        f"{os.getenv('LLM_URL')}{os.getenv('APIKEY')}",
-        headers={"Content-Type": "application/json"},
-        data=json.dumps({"contents": [{"parts": [{"text": prompt}]}]}),
-    )
-    res = response.json()
-    parts = res.get("candidates", [])[0].get("content", []).get("parts", [])
+    base64_text_files = request_json.get("base64_text_files", [])
+    for file in base64_text_files:
+        decoded_file = base64.b64decode(file).decode("utf-8")
+        prompt += "\n" + decoded_file
 
-    return Response(json.dumps(parts), mimetype="application/json")
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    response = model.generate_content(prompt)
+
+    parts = [part.text for part in response._result.candidates[0].content.parts]
+
+    return Response(
+        json.dumps(parts),
+        status=200,
+        mimetype="application/json",
+    )
