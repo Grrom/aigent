@@ -31,6 +31,7 @@ jobs:
         run: |
           printf "%s" '${{ secrets.GCF_DEPLOYER_KEY }}' > key-file.json
           gcloud auth activate-service-account --key-file=key-file.json
+          rm key-file.json
           gcloud functions deploy aigent \
           --runtime python39 \
           --entry-point send_prompt \
